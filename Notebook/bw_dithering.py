@@ -12,6 +12,7 @@ class BWDitheringApp:
         self.image_path = tk.StringVar()
         self.algorithm = tk.StringVar(value="Threshold")
         self.threshold_value = tk.IntVar(value=128)
+        self.channel = tk.StringVar(value="Red")
 
         self.create_widgets()
         self.original_image = None
@@ -34,15 +35,20 @@ class BWDitheringApp:
         self.threshold_entry = tk.Entry(self.root, textvariable=self.threshold_value)
         self.threshold_entry.grid(row=2, column=1)
 
+        # Grayscale channel selection
+        tk.Label(self.root, text="Grayscale Channel:").grid(row=3, column=0, sticky=tk.W)
+        channel_menu = ttk.OptionMenu(self.root, self.channel, "Red", "Red", "Green", "Blue")
+        channel_menu.grid(row=3, column=1)
+
         # Generate and Save buttons
-        tk.Button(self.root, text="Generate", command=self.start_conversion_thread).grid(row=3, column=0)
-        tk.Button(self.root, text="Save Dithered", command=self.save_image).grid(row=3, column=1)
+        tk.Button(self.root, text="Generate", command=self.start_conversion_thread).grid(row=4, column=0)
+        tk.Button(self.root, text="Save Dithered", command=self.save_image).grid(row=4, column=1)
 
         # Image display
         self.original_image_label = tk.Label(self.root)
-        self.original_image_label.grid(row=4, column=0, columnspan=2)
+        self.original_image_label.grid(row=5, column=0, columnspan=3)
         self.dithered_image_label = tk.Label(self.root)
-        self.dithered_image_label.grid(row=4, column=2, columnspan=2)
+        self.dithered_image_label.grid(row=6, column=0, columnspan=3)
 
     def browse_file(self):
         file_path = filedialog.askopenfilename()
@@ -87,7 +93,7 @@ class BWDitheringApp:
             messagebox.showerror("Error", "No image loaded")
             return
         
-        gray_image = ImageOps.grayscale(self.original_image)
+        gray_image = self.convert_to_grayscale(self.original_image)
         gray_array = np.array(gray_image)
 
         if self.algorithm.get() == "Threshold":
@@ -96,6 +102,11 @@ class BWDitheringApp:
         elif self.algorithm.get() == "Random":
             random_threshold = np.random.randint(0, 256, gray_array.shape)
             self.dithered_image = Image.fromarray((gray_array > random_threshold) * 255).convert("1")
+
+    def convert_to_grayscale(self, image):
+        channels = {"Red": 0, "Green": 1, "Blue": 2}
+        channel = channels[self.channel.get()]
+        return image.split()[channel]
 
     def save_image(self):
         if self.dithered_image is None:
