@@ -26,7 +26,7 @@ class BWDitheringApp:
 
         # Algorithm selection
         tk.Label(self.root, text="Algorithm:").grid(row=1, column=0, sticky=tk.W)
-        algorithm_menu = ttk.OptionMenu(self.root, self.algorithm, "Threshold", "Threshold", "Random", command=self.update_parameters)
+        algorithm_menu = ttk.OptionMenu(self.root, self.algorithm, "Threshold", "Threshold", "Random", "Halftone", command=self.update_parameters)
         algorithm_menu.grid(row=1, column=1, columnspan=2, sticky=tk.W)
 
         # Threshold parameter
@@ -104,11 +104,37 @@ class BWDitheringApp:
         elif self.algorithm.get() == "Random":
             random_threshold = np.random.randint(0, 256, gray_array.shape)
             self.dithered_image = Image.fromarray((gray_array > random_threshold) * 255).convert("1")
+        elif self.algorithm.get() == "Halftone":
+            self.dithered_image = self.halftone_dithering(gray_array)
 
     def convert_to_grayscale(self, image):
         channels = {"Red": 0, "Green": 1, "Blue": 2}
         channel = channels[self.channel.get()]
         return image.split()[channel]
+
+    def halftone_dithering(self, gray_array):
+        def halftone_cell(cell):
+            patterns = [
+                [[0, 0], [0, 0]],
+                [[0, 0], [0, 1]],
+                [[0, 1], [0, 1]],
+                [[0, 1], [1, 1]],
+                [[1, 1], [1, 1]]
+            ]
+            avg_intensity = np.mean(cell)
+            pattern_index = int((avg_intensity / 255) * (len(patterns) - 1))
+            return patterns[pattern_index]
+
+        output_array = np.zeros_like(gray_array)
+        for i in range(0, gray_array.shape[0], 2):
+            for j in range(0, gray_array.shape[1], 2):
+                cell = gray_array[i:i+2, j:j+2]
+                pattern = halftone_cell(cell)
+                for k in range(2):
+                    for l in range(2):
+                        if i + k < gray_array.shape[0] and j + l < gray_array.shape[1]:
+                            output_array[i + k, j + l] = pattern[k][l] * 255
+        return Image.fromarray(output_array).convert("1")
 
     def save_image(self):
         if self.dithered_image is None:
