@@ -21,34 +21,36 @@ class BWDitheringApp:
     def create_widgets(self):
         # File selection
         tk.Label(self.root, text="Image Path:").grid(row=0, column=0, sticky=tk.W)
-        tk.Entry(self.root, textvariable=self.image_path, width=50).grid(row=0, column=1)
-        tk.Button(self.root, text="Browse", command=self.browse_file).grid(row=0, column=2)
+        tk.Entry(self.root, textvariable=self.image_path, width=50).grid(row=0, column=1, columnspan=2)
+        tk.Button(self.root, text="Browse", command=self.browse_file).grid(row=0, column=3)
 
         # Algorithm selection
         tk.Label(self.root, text="Algorithm:").grid(row=1, column=0, sticky=tk.W)
         algorithm_menu = ttk.OptionMenu(self.root, self.algorithm, "Threshold", "Threshold", "Random", command=self.update_parameters)
-        algorithm_menu.grid(row=1, column=1)
+        algorithm_menu.grid(row=1, column=1, columnspan=2, sticky=tk.W)
 
         # Threshold parameter
         self.threshold_label = tk.Label(self.root, text="Threshold:")
         self.threshold_label.grid(row=2, column=0, sticky=tk.W)
         self.threshold_entry = tk.Entry(self.root, textvariable=self.threshold_value)
-        self.threshold_entry.grid(row=2, column=1)
+        self.threshold_entry.grid(row=2, column=1, columnspan=2, sticky=tk.W)
 
         # Grayscale channel selection
         tk.Label(self.root, text="Grayscale Channel:").grid(row=3, column=0, sticky=tk.W)
         channel_menu = ttk.OptionMenu(self.root, self.channel, "Red", "Red", "Green", "Blue")
-        channel_menu.grid(row=3, column=1)
+        channel_menu.grid(row=3, column=1, columnspan=2, sticky=tk.W)
 
         # Generate and Save buttons
-        tk.Button(self.root, text="Generate", command=self.start_conversion_thread).grid(row=4, column=0)
-        tk.Button(self.root, text="Save Dithered", command=self.save_image).grid(row=4, column=1)
+        button_frame = tk.Frame(self.root)
+        button_frame.grid(row=4, column=0, columnspan=4)
+        tk.Button(button_frame, text="Generate", command=self.start_conversion_thread).pack(side=tk.LEFT, padx=10)
+        tk.Button(button_frame, text="Save Dithered", command=self.save_image).pack(side=tk.LEFT, padx=10)
 
         # Image display
         self.original_image_label = tk.Label(self.root)
-        self.original_image_label.grid(row=5, column=0, columnspan=3)
+        self.original_image_label.grid(row=5, column=0, columnspan=4)
         self.dithered_image_label = tk.Label(self.root)
-        self.dithered_image_label.grid(row=6, column=0, columnspan=3)
+        self.dithered_image_label.grid(row=6, column=0, columnspan=4)
 
     def browse_file(self):
         file_path = filedialog.askopenfilename()
