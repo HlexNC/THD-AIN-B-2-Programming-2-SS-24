@@ -26,7 +26,7 @@ class BWDitheringApp:
 
         # Algorithm selection
         tk.Label(self.root, text="Algorithm:").grid(row=1, column=0, sticky=tk.W)
-        algorithm_menu = ttk.OptionMenu(self.root, self.algorithm, "Threshold", "Threshold", "Random", "Halftone", command=self.update_parameters)
+        algorithm_menu = ttk.OptionMenu(self.root, self.algorithm, "Threshold", "Threshold", "Random", "Halftone", "Ordered (Bayer)", command=self.update_parameters)
         algorithm_menu.grid(row=1, column=1, columnspan=2, sticky=tk.W)
 
         # Threshold parameter
@@ -106,6 +106,8 @@ class BWDitheringApp:
             self.dithered_image = Image.fromarray((gray_array > random_threshold) * 255).convert("1")
         elif self.algorithm.get() == "Halftone":
             self.dithered_image = self.halftone_dithering(gray_array)
+        elif self.algorithm.get() == "Ordered (Bayer)":
+            self.dithered_image = self.ordered_bayer_dithering(gray_array)
 
     def convert_to_grayscale(self, image):
         channels = {"Red": 0, "Green": 1, "Blue": 2}
@@ -135,6 +137,20 @@ class BWDitheringApp:
                         if i + k < gray_array.shape[0] and j + l < gray_array.shape[1]:
                             output_array[i + k, j + l] = pattern[k][l] * 255
         return Image.fromarray(output_array).convert("1")
+
+    def ordered_bayer_dithering(self, gray_array):
+        bayer_matrix = np.array([
+            [ 15, 135,  45, 165],
+            [195,  75, 225, 105],
+            [ 60, 180,  30, 150],
+            [240, 120, 210,  90]
+        ]) / 255.0
+
+        tiled_matrix = np.tile(bayer_matrix, (gray_array.shape[0] // 4 + 1, gray_array.shape[1] // 4 + 1))
+        tiled_matrix = tiled_matrix[:gray_array.shape[0], :gray_array.shape[1]]
+
+        dithered_array = (gray_array / 255.0 > tiled_matrix) * 255
+        return Image.fromarray(dithered_array.astype(np.uint8)).convert("1")
 
     def save_image(self):
         if self.dithered_image is None:
